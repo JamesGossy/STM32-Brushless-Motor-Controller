@@ -257,7 +257,12 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      [
+        "power_pin_not_driven|3454400|3492500|d8d22117-fab7-4380-9d15-e47703058b6f|00000000-0000-0000-0000-000000000000|/746d987d-06f7-4596-a601-faf34de29dec|/746d987d-06f7-4596-a601-faf34de29dec|",
+        "Shit trippin"
+      ]
+    ],
     "meta": {
       "version": 0
     },
@@ -600,12 +605,348 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Availability",
+          "name": "Availability",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "CREATOR",
+          "name": "CREATOR",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Capacitance",
+          "name": "Capacitance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Category",
+          "name": "Category",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Check_prices",
+          "name": "Check_prices",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Circuits",
+          "name": "Circuits",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Class",
+          "name": "Class",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Crystal Type",
+          "name": "Crystal Type",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Current Rating",
+          "name": "Current Rating",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "DC Resistance",
+          "name": "DC Resistance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description_1",
+          "name": "Description_1",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Diode Configuration",
+          "name": "Diode Configuration",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Dominant Wavelength",
+          "name": "Dominant Wavelength",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Emitted Color",
+          "name": "Emitted Color",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Forward Current",
+          "name": "Forward Current",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Forward Voltage (VF)",
+          "name": "Forward Voltage (VF)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Frequency",
+          "name": "Frequency",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Frequency Stability",
+          "name": "Frequency Stability",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Frequency Tolerance",
+          "name": "Frequency Tolerance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Impedance @ Frequency",
+          "name": "Impedance @ Frequency",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC",
+          "name": "LCSC",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC Part",
+          "name": "LCSC Part",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Lens Color",
+          "name": "Lens Color",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Load Capacitance",
+          "name": "Load Capacitance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Luminous Intensity",
+          "name": "Luminous Intensity",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MANUFACTURER",
+          "name": "MANUFACTURER",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MAXIMUM_PACKAGE_HEIGHT",
+          "name": "MAXIMUM_PACKAGE_HEIGHT",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MF",
+          "name": "MF",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MP",
+          "name": "MP",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MPN",
+          "name": "MPN",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Manufacturer",
+          "name": "Manufacturer",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Minimum Qty",
+          "name": "Minimum Qty",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Normal Temperature Frequency Tolerance",
+          "name": "Normal Temperature Frequency Tolerance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Operating Temperature",
+          "name": "Operating Temperature",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Operating Temperature Range",
+          "name": "Operating Temperature Range",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Overload Voltage (Max)",
+          "name": "Overload Voltage (Max)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "PARTREV",
+          "name": "PARTREV",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Package",
+          "name": "Package",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Part",
+          "name": "Part",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Part No",
+          "name": "Part No",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Power Dissipation",
+          "name": "Power Dissipation",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Power(Watts)",
+          "name": "Power(Watts)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Price",
+          "name": "Price",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Process",
+          "name": "Process",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Resistance",
+          "name": "Resistance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "STANDARD",
+          "name": "STANDARD",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "SnapEDA_Link",
+          "name": "SnapEDA_Link",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Stock",
+          "name": "Stock",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Temperature Coefficient",
+          "name": "Temperature Coefficient",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Tolerance",
+          "name": "Tolerance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Type",
+          "name": "Type",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Viewing Angle",
+          "name": "Viewing Angle",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Voltage Rated",
+          "name": "Voltage Rated",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Attrition Qty",
+          "name": "Attrition Qty",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
@@ -658,7 +999,7 @@
         "uuid": "746d987d-06f7-4596-a601-faf34de29dec"
       }
     ],
-    "used_designators": "L1-3,#PWR1-85,#PWR88-105,C1-65,#FLG1-4,R1-35,R38-40,NT1-3,Q1-6,TP1-4,TP9-10,U1-17,TH1-4,D1-2,FB1-2,H1-3,J1-2,SW1,X1",
+    "used_designators": "FB5-8,L2",
     "variants": []
   },
   "sheets": [
