@@ -1,0 +1,142 @@
+/*
+ * main.c — Open-loop FOC voltage injection for STM32G474RE (NUCLEO-G474RE)
+ *
+ * Signal chain (TIM1 update ISR, 20 kHz):
+ *   AngleRamp -> ParkInv(Vd=0, Vq) -> ClarkeInv -> SVPWM -> PWM_SetDuty
+ *
+ * Tuning knobs (live-edit via debugger watch/live expressions):
+ *   g_freqHz   — electrical frequency in Hz  (start: 5.0)
+ *   g_Vq       — injected Vq in V            (start: 2–3 V)
+ *   g_Vdc      — DC bus voltage in V         (set to measured bus, e.g. 24.0)
+ *   g_enable   — 0 = outputs disabled, 1 = running
+ */
+
+#include "main.h"
+#include "hal/hal_init.h"
+#include "hal/hal_pwm.h"
+#include "control/angle_ramp.h"
+#include "control/transforms.h"
+#include "control/svpwm.h"
+
+/* ------------------------------------------------------------------ */
+/* Tuning knobs — edit live in debugger                                */
+/* ------------------------------------------------------------------ */
+volatile float    g_freqHz  = 60.0f;  /* target elec Hz: 4-pole, 20 Hz = 600 RPM mech */
+volatile float    g_Vd      = 4.0f;
+volatile float    g_Vq      = 0.0f;   /* ~25% of 24V — enough to overcome detent */
+volatile float    g_Vdc     = 12.0f;  /* set to your actual bus voltage */
+volatile uint32_t g_enable  = 1;     /* set to 1 in debugger to trigger sweep */
+
+/* ------------------------------------------------------------------ */
+/* Telemetry — watch in debugger                                       */
+/* ------------------------------------------------------------------ */
+volatile float    g_theta    = 0.0f;
+volatile float    g_dutyA    = 0.5f;
+volatile float    g_dutyB    = 0.5f;
+volatile float    g_dutyC    = 0.5f;
+volatile uint32_t g_isrCount = 0u;
+
+/* ------------------------------------------------------------------ */
+/* Control state                                                       */
+/* ------------------------------------------------------------------ */
+#define CONTROL_TS        (1.0f / 20000.0f)   /* 50 µs */
+#define LED_TOGGLE_TICKS  10000u              /* 10000 * 50µs = 0.5s -> 1 Hz blink */
+
+/* Open-loop startup sweep: ramp from 0 to g_freqHz over RAMP_TICKS ISR ticks.
+ * 40000 ticks * 50 µs = 2 s sweep. Motor must sync before the ramp ends. */
+#define RAMP_TICKS        40000u
+
+static AngleRamp_t s_ramp;
+static uint32_t    s_enablePrev = 0u;
+static uint32_t    s_rampTick   = 0u;
+
+/* ------------------------------------------------------------------ */
+/* TIM1 Update ISR — fires at 20 kHz (every underflow in center-      */
+/* aligned mode 1). This is where the control runs.                   */
+/* ------------------------------------------------------------------ */
+void TIM1_UP_TIM16_IRQHandler(void)
+{
+    /* Clear update interrupt flag */
+    TIM1->SR = ~TIM_SR_UIF;
+
+    g_isrCount++;
+
+    /* LD2 heartbeat — toggle PA5 every 0.5 s (1 Hz) */
+    if (g_isrCount % LED_TOGGLE_TICKS == 0u)
+        GPIOA->ODR ^= GPIO_ODR_OD5;
+
+    /* Track enable transitions */
+    uint32_t en = g_enable;
+    if (en != s_enablePrev)
+    {
+        if (en)
+        {
+            s_rampTick = 0u;
+            AngleRamp_init(&s_ramp, 0.0f, CONTROL_TS);
+            PWM_EnableOutput();
+        }
+        else
+            PWM_DisableOutput();
+        s_enablePrev = en;
+    }
+
+    if (!en)
+        return;
+
+    /* Sweep frequency from 0 -> g_freqHz over RAMP_TICKS to let rotor sync.
+     * After the ramp, track g_freqHz directly (live tuning still works). */
+    float freq;
+    if (s_rampTick < RAMP_TICKS)
+    {
+        freq = g_freqHz * ((float)s_rampTick / (float)RAMP_TICKS);
+        s_rampTick++;
+    }
+    else
+        freq = g_freqHz;
+    AngleRamp_setFreq(&s_ramp, freq);
+
+    /* Advance angle */
+    float theta = AngleRamp_update(&s_ramp);
+    g_theta = theta;
+
+    /* Inverse Park: (Vd, Vq) -> (Valpha, Vbeta) */
+    float Valpha, Vbeta;
+    ParkInv(g_Vd, g_Vq, theta, &Valpha, &Vbeta);
+
+    /* Inverse Clarke: (Valpha, Vbeta) -> (Va, Vb, Vc) */
+    float Va, Vb, Vc;
+    ClarkeInv(Valpha, Vbeta, &Va, &Vb, &Vc);
+
+    /* SVPWM modulation */
+    float dutyA, dutyB, dutyC;
+    float vdc = g_Vdc;
+    if (vdc < 1.0f) vdc = 1.0f;   /* guard against zero */
+    SVPWM_calc(Va, Vb, Vc, vdc, &dutyA, &dutyB, &dutyC);
+
+    g_dutyA = dutyA;
+    g_dutyB = dutyB;
+    g_dutyC = dutyC;
+
+    PWM_SetDuty(dutyA, dutyB, dutyC);
+}
+
+/* ------------------------------------------------------------------ */
+/* Main                                                                */
+/* ------------------------------------------------------------------ */
+int main(void)
+{
+    SystemClock_Config();
+    GPIO_Init();
+    TIM1_Init();
+
+    AngleRamp_init(&s_ramp, g_freqHz, CONTROL_TS);
+
+    /* Outputs start disabled — set g_enable=1 in debugger to spin */
+
+    for (;;)
+    {
+        /* Background loop — nothing to do without comms.
+         * All control runs in the ISR. */
+        __WFI();
+    }
+}

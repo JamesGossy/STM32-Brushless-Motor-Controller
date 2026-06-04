@@ -1,0 +1,117 @@
+12:55:05 **** Clean-only build of configuration Default for project delta ****
+make clean 
+cat clean.sh >clean 
+chmod a+x clean
+make: *** [<builtin>: clean] Error -1
+"make clean" terminated with exit code 2. Build might be incomplete.
+13:31:53 **** Build of configuration Default for project delta ****
+make all 
+make: *** No rule to make target 'all'.  Stop.
+"make all" terminated with exit code 2. Build might be incomplete.
+13:32:39 **** Incremental Build of configuration Default for project delta ****
+make all 
+make: *** No rule to make target 'all'.  Stop.
+"make all" terminated with exit code 2. Build might be incomplete.
+13:34:02 **** Incremental Build of configuration Default for project delta ****
+make all 
+./build.sh
+make: *** [Makefile:2: all] Error -1
+"make all" terminated with exit code 2. Build might be incomplete.
+13:36:34 **** Incremental Build of configuration Default for project delta ****
+make all 
+./build.sh
+make: *** [Makefile:2: all] Error -1
+"make all" terminated with exit code 2. Build might be incomplete.
+13:36:37 **** Incremental Build of configuration Default for project delta ****
+make all 
+./build.sh
+make: *** [Makefile:2: all] Error -1
+"make all" terminated with exit code 2. Build might be incomplete.
+13:36:38 **** Incremental Build of configuration Default for project delta ****
+make all 
+./build.sh
+make: *** [Makefile:2: all] Error -1
+"make all" terminated with exit code 2. Build might be incomplete.
+13:37:16 **** Incremental Build of configuration Default for project delta ****
+make all 
+./build.sh
+make: *** [Makefile:2: all] Error -1
+"make all" terminated with exit code 2. Build might be incomplete.
+13:37:44 **** Incremental Build of configuration Default for project delta ****
+make all 
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/app
+ninja: Entering directory `build/app'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\app && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage1-bootloader
+ninja: Entering directory `build/stage1-bootloader'
+ninja: no work to do.
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage2-bootloader
+ninja: Entering directory `build/stage2-bootloader'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\stage2-bootloader && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage2-bootloader-updater
+ninja: Entering directory `build/stage2-bootloader-updater'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\stage2-bootloader-updater && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+13:38:24 **** Incremental Build of configuration Default for project delta ****
+make all 
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/app
+ninja: Entering directory `build/app'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\app && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage1-bootloader
+ninja: Entering directory `build/stage1-bootloader'
+ninja: no work to do.
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage2-bootloader
+ninja: Entering directory `build/stage2-bootloader'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\stage2-bootloader && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage2-bootloader-updater
+ninja: Entering directory `build/stage2-bootloader-updater'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\stage2-bootloader-updater && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+13:53:51 **** Incremental Build of configuration Default for project delta ****
+make all 
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/app
+ninja: Entering directory `build/app'
+[1/3] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\app && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+[2/3] Building C object CMakeFiles/delta.dir/app/src/brakectl.c.obj
+C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/app/src/brakectl.c: In function 'breakaway_task':
+C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/app/src/brakectl.c:29:27: warning: unused parameter 'p' [-Wunused-parameter]
+   29 | void breakaway_task(void *p) {
+      |                     ~~~~~~^
+[3/3] Linking C executable delta.elf
+C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.14.3.rel1.win32_1.0.100.202602081740/tools/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/bin/ld.exe: warning: delta.elf has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+STAGE1_BOOTLOADER:           0 B        16 KB      0.00%
+STAGE2_BOOTLOADER:           0 B        32 KB      0.00%
+STAGE2_BOOTLOADER_UPDATER:           0 B        80 KB      0.00%
+
+             APP:       51956 B       384 KB     13.21%
+
+      SHARED_RAM:           9 B        256 B      3.52%
+
+             RAM:      134656 B     261888 B     51.42%
+
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage1-bootloader
+ninja: Entering directory `build/stage1-bootloader'
+ninja: no work to do.
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage2-bootloader
+ninja: Entering directory `build/stage2-bootloader'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\stage2-bootloader && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
+"C:/ST/STM32CubeIDE_2.1.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.ninja.win32_1.1.100.202601091506/tools/bin/ninja.exe" -C build/stage2-bootloader-updater
+ninja: Entering directory `build/stage2-bootloader-updater'
+[1/1] C:\Windows\system32\cmd.exe /C "cd /D C:\Users\hames\OneDrive\Documents\Engineering\aston_dynamics\delta\build\stage2-bootloader-updater && C:\ST\STM32CubeIDE_2.1.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cmake.win32_1.1.101.202603101401\tools\bin\cmake.exe -DDIR=C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/generated -DFILENAME=git_version -P C:/Users/hames/OneDrive/Documents/Engineering/aston_dynamics/delta/cmake/git.cmake"
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.46.0.windows.1")
+Git Hash: d8556c4
