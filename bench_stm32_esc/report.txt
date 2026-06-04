@@ -1,2 +1,0 @@
-Warning: 1 duplicate time stamps were found and replaced.
-Annotation complete.

@@ -1,2 +1,0 @@
-../Src/hal/hal_spi.c:18:6:SPI_Init	4	static
-../Src/hal/hal_spi.c:69:10:SPI_GD_Transfer	24	static
