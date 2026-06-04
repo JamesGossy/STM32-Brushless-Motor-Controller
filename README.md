@@ -25,7 +25,7 @@ A compact 4-layer ESC-class controller for robotics, gimbal, and general BLDC/PM
 | Gate driver | DRV8353S (SPI variant) |
 | Input voltage | 12 to 60 V |
 | Max continuous phase current | 25 A |
-| Power MOSFETs | IAUCN08S7N019ATMA1 (80 V, 1.9 mΩ), 6 off |
+| Power MOSFETs | IAUCN08S7N019ATMA1 (80 V, 1.9 mΩ) |
 | Switching frequency | 20 kHz |
 | Position sensor | MagAlpha MA730 (SPI) + external quadrature backup |
 | Current sensing | Low-side, 2 mΩ shunts, Kelvin sense |
