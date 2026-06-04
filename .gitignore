@@ -1,0 +1,14 @@
+# STM32CubeIDE build output
+Debug/
+Release/
+
+# KiCad autosave/lock files
+*.lck
+*-backups/
+*.kicad_pcb_old
+*.kicad_sch_old
+*.history
+
+# Misc
+*.txt
+peripheral_setup.txt
