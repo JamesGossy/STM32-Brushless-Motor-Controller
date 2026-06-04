@@ -1,0 +1,216 @@
+/*
+ * main.c — Open-loop FOC voltage injection for STM32G474RE (NUCLEO-G474RE)
+ *
+ * Binary telemetry frame (921600 baud, 50 Hz):
+ *   [0xAA][0x55][Ia:i16][Ib:i16][Ic:i16][Vbus:u16][theta:u16]
+ *   [omega:i16][AmbT:i16][PhT:i16][fault:u8][0x55]  — 20 bytes total
+ *
+ *   Scales: currents *100 -> cA, Vbus *100 -> cV, theta *10000 -> 0..62831,
+ *           omega *10 -> 0.1 rad/s, temps *10 -> 0.1 °C
+ */
+
+#include "main.h"
+#include <stdint.h>
+#include <stdio.h>
+#include "hal/hal_init.h"
+#include "hal/hal_pwm.h"
+#include "hal/hal_uart.h"
+#include "hal/hal_spi.h"
+#include "hal/hal_adc.h"
+#include "control/angle_ramp.h"
+#include "control/transforms.h"
+#include "control/svpwm.h"
+#include "drv835x.h"
+
+/* ------------------------------------------------------------------ */
+/* Tuning knobs — edit live in debugger                                */
+/* ------------------------------------------------------------------ */
+volatile float    g_freqHz  = 5.0f;  /* target elec Hz: 4-pole, 20 Hz = 600 RPM mech */
+volatile float    g_Vd      = 4.0f;
+volatile float    g_Vq      = 0.0f;   /* ~25% of 24V — enough to overcome detent */
+volatile float    g_Vdc     = 24.0f;  /* set to your actual bus voltage */
+volatile uint32_t g_enable  = 1;     /* set to 1 in debugger to trigger sweep */
+
+/* ------------------------------------------------------------------ */
+/* Telemetry                                                           */
+/* ------------------------------------------------------------------ */
+volatile float    g_theta    = 0.0f;
+volatile float    g_omega    = 0.0f;   /* electrical angular velocity rad/s */
+volatile float    g_dutyA    = 0.5f;
+volatile float    g_dutyB    = 0.5f;
+volatile float    g_dutyC    = 0.5f;
+volatile uint32_t g_isrCount = 0u;
+
+/* ------------------------------------------------------------------ */
+/* Binary frame packing — big-endian i16/u16                          */
+/* ------------------------------------------------------------------ */
+#define TELEM_SYNC0  0xAAu
+#define TELEM_SYNC1  0x55u
+#define TELEM_TAIL   0x55u
+#define TELEM_LEN    20u   /* 2 sync + 8x i16/u16 + 1 fault + 1 tail */
+
+static void pack_be16(uint8_t *buf, int16_t v)
+{
+    buf[0] = (uint8_t)((uint16_t)v >> 8);
+    buf[1] = (uint8_t)((uint16_t)v & 0xFFu);
+}
+
+static void pack_beu16(uint8_t *buf, uint16_t v)
+{
+    buf[0] = (uint8_t)(v >> 8);
+    buf[1] = (uint8_t)(v & 0xFFu);
+}
+
+static int16_t clamp16(float v)
+{
+    if (v >  32767.0f) return  32767;
+    if (v < -32768.0f) return -32768;
+    return (int16_t)v;
+}
+
+/* ------------------------------------------------------------------ */
+/* Control state                                                       */
+/* ------------------------------------------------------------------ */
+#define CONTROL_TS        (1.0f / 20000.0f)   /* 50 µs */
+#define LED_TOGGLE_TICKS  10000u              /* 10000 * 50µs = 0.5s -> 1 Hz blink */
+
+/* Open-loop startup sweep: ramp from 0 to g_freqHz over RAMP_TICKS ISR ticks.
+ * 40000 ticks * 50 µs = 2 s sweep. Motor must sync before the ramp ends. */
+#define RAMP_TICKS        40000u
+
+static AngleRamp_t s_ramp;
+static uint32_t    s_enablePrev = 0u;
+static uint32_t    s_rampTick   = 0u;
+
+/* ------------------------------------------------------------------ */
+/* TIM1 Update ISR — fires at 20 kHz (every underflow in center-      */
+/* aligned mode 1). This is where the control runs.                   */
+/* ------------------------------------------------------------------ */
+void TIM1_UP_TIM16_IRQHandler(void)
+{
+    /* Clear update interrupt flag */
+    TIM1->SR = ~TIM_SR_UIF;
+
+    g_isrCount++;
+
+    /* PA5 is now SPI SCK — LED heartbeat removed */
+
+    /* Track enable transitions */
+    uint32_t en = g_enable;
+    if (en != s_enablePrev)
+    {
+        if (en)
+        {
+            s_rampTick = 0u;
+            AngleRamp_init(&s_ramp, 0.0f, CONTROL_TS);
+            PWM_EnableOutput();
+        }
+        else
+            PWM_DisableOutput();
+        s_enablePrev = en;
+    }
+
+    if (!en)
+        return;
+
+    /* Sweep frequency from 0 -> g_freqHz over RAMP_TICKS to let rotor sync.
+     * After the ramp, track g_freqHz directly (live tuning still works). */
+    float freq;
+    if (s_rampTick < RAMP_TICKS)
+    {
+        freq = g_freqHz * ((float)s_rampTick / (float)RAMP_TICKS);
+        s_rampTick++;
+    }
+    else
+        freq = g_freqHz;
+    AngleRamp_setFreq(&s_ramp, freq);
+
+    /* Advance angle, track omega */
+    float theta_prev = g_theta;
+    float theta = AngleRamp_update(&s_ramp);
+    g_theta = theta;
+    /* unwrap delta then low-pass to avoid 2pi wrap spikes */
+    float dtheta = theta - theta_prev;
+    if      (dtheta >  3.14159f) dtheta -= 6.28318f;
+    else if (dtheta < -3.14159f) dtheta += 6.28318f;
+    g_omega = dtheta * 20000.0f;   /* rad/s = dtheta / Ts */
+
+    /* Inverse Park: (Vd, Vq) -> (Valpha, Vbeta) */
+    float Valpha, Vbeta;
+    ParkInv(g_Vd, g_Vq, theta, &Valpha, &Vbeta);
+
+    /* Inverse Clarke: (Valpha, Vbeta) -> (Va, Vb, Vc) */
+    float Va, Vb, Vc;
+    ClarkeInv(Valpha, Vbeta, &Va, &Vb, &Vc);
+
+    /* SVPWM modulation */
+    float dutyA, dutyB, dutyC;
+    float vdc = g_Vdc;
+    if (vdc < 1.0f) vdc = 1.0f;   /* guard against zero */
+    SVPWM_calc(Va, Vb, Vc, vdc, &dutyA, &dutyB, &dutyC);
+
+    g_dutyA = dutyA;
+    g_dutyB = dutyB;
+    g_dutyC = dutyC;
+
+    PWM_SetDuty(dutyA, dutyB, dutyC);
+}
+
+/* ------------------------------------------------------------------ */
+/* Main                                                                */
+/* ------------------------------------------------------------------ */
+int main(void)
+{
+    uint32_t last_telem = 0u;
+    DRV835x_Status_t drv;
+
+    SystemClock_Config();
+    GPIO_Init();
+    TIM1_Init();
+    UART_Init();
+    SPI_Init();
+    DRV835x_Configure();
+    ADC_Init();
+    DRV835x_CalibrateCSA();
+
+    AngleRamp_init(&s_ramp, g_freqHz, CONTROL_TS);
+
+    for (;;)
+    {
+        ADC_Sample();
+
+        /* Send binary telemetry at 50 Hz (every 400 ticks * 50µs = 20ms) */
+        if ((g_isrCount - last_telem) >= 400u)
+        {
+            last_telem = g_isrCount;
+
+            DRV835x_ReadStatus(&drv);
+            int hw_fault = GD_NFAULT_ACTIVE();
+
+            /* Ic = -(Ia + Ib) by Kirchhoff */
+            float Ic = -(g_adcSoA + g_adcSoB);
+
+            /* fault byte: bit0 = hw_fault, bit1 = SPI fault */
+            uint8_t fault = (uint8_t)((hw_fault ? 0x01u : 0u) |
+                                      (DRV835x_HasFault(&drv) ? 0x02u : 0u));
+
+            uint8_t frame[TELEM_LEN];
+            frame[0] = TELEM_SYNC0;
+            frame[1] = TELEM_SYNC1;
+            pack_be16 (&frame[2],  clamp16(g_adcSoA     * 100.0f));
+            pack_be16 (&frame[4],  clamp16(g_adcSoB     * 100.0f));
+            pack_be16 (&frame[6],  clamp16(Ic           * 100.0f));
+            pack_beu16(&frame[8],  (uint16_t)(g_adcVbus * 100.0f));
+            pack_beu16(&frame[10], (uint16_t)(g_theta   * 10000.0f) % 62832u);
+            pack_be16 (&frame[12], clamp16(g_omega      * 10.0f));
+            pack_be16 (&frame[14], clamp16(g_adcAmbTemp * 10.0f));
+            pack_be16 (&frame[16], clamp16(g_adcPhaseTemp * 10.0f));
+            frame[18] = fault;
+            frame[19] = TELEM_TAIL;
+
+            UART_WriteBytes(frame, TELEM_LEN);
+        }
+
+        __WFI();
+    }
+}

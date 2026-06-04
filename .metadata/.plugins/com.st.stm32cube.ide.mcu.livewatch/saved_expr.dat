@@ -1,0 +1,11 @@
+g_enable
+g_freqHz
+g_Vd
+g_Vq
+g_Vdc
+g_adcSoA
+g_adcSoB
+g_theta
+g_omega
+g_duty
+g_mode
