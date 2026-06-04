@@ -1,7 +1,0 @@
-../Src/hal/hal_adc.c:45:13:adc_calibrate_and_enable	24	static
-../Src/hal/hal_adc.c:62:17:adc_read_channel	16	static
-../Src/hal/hal_adc.c:80:6:ADC_Init	8	static
-../Src/hal/hal_adc.c:167:6:ADC_ConvertCurrents	24	static
-../Src/hal/hal_adc.c:191:6:ADC_Sample	24	static
-../Src/hal/hal_adc.c:227:6:ADC_Sample_Raw	24	static
-../Src/hal/hal_adc.c:238:6:ADC_RearmHwTrigger	4	static

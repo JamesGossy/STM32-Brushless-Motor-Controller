@@ -1,4 +1,0 @@
-../Src/hal/hal_pwm.c:49:6:PWM_EnableOutput	4	static
-../Src/hal/hal_pwm.c:55:6:PWM_DisableOutput	4	static
-../Src/hal/hal_pwm.c:61:6:PWM_SetDuty	24	static
-../Src/hal/hal_pwm.c:83:6:PWM_SetStep	24	static

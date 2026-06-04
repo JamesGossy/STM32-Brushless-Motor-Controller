@@ -1,3 +1,0 @@
-../Src/control/angle_ramp.c:6:6:AngleRamp_init	24	static
-../Src/control/angle_ramp.c:13:6:AngleRamp_setFreq	16	static
-../Src/control/angle_ramp.c:18:7:AngleRamp_update	16	static

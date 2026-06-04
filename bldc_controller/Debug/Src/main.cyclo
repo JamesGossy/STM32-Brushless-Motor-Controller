@@ -1,9 +1,0 @@
-../Inc/drv835x.h:80:19:DRV835x_HasFault	1
-../Src/main.c:64:13:pack_be16	1
-../Src/main.c:70:13:pack_beu16	1
-../Src/main.c:76:16:clamp16	3
-../Src/main.c:110:13:restore_all_ccer	1
-../Src/main.c:117:13:init_foc	1
-../Src/main.c:125:13:init_sixstep	1
-../Src/main.c:135:6:TIM1_UP_TIM16_IRQHandler	17
-../Src/main.c:237:5:main	5

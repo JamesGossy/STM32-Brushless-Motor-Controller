@@ -1,4 +1,0 @@
-../Src/hal/hal_uart.c:15:6:UART_Init	1
-../Src/hal/hal_uart.c:46:6:UART_PutChar	2
-../Src/hal/hal_uart.c:52:6:UART_WriteBytes	3
-../Src/hal/hal_uart.c:62:5:__io_putchar	2

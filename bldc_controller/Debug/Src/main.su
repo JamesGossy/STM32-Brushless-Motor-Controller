@@ -1,9 +1,0 @@
-../Inc/drv835x.h:80:19:DRV835x_HasFault	16	static
-../Src/main.c:64:13:pack_be16	16	static
-../Src/main.c:70:13:pack_beu16	16	static
-../Src/main.c:76:16:clamp16	16	static
-../Src/main.c:110:13:restore_all_ccer	4	static
-../Src/main.c:117:13:init_foc	8	static
-../Src/main.c:125:13:init_sixstep	8	static
-../Src/main.c:135:6:TIM1_UP_TIM16_IRQHandler	80	static
-../Src/main.c:237:5:main	56	static,ignoring_inline_asm

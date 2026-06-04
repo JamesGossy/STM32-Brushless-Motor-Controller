@@ -1,7 +1,0 @@
-../Inc/drv835x.h:80:19:DRV835x_HasFault	16	static
-../Src/drv835x.c:21:17:drv_read_reg	24	static
-../Src/drv835x.c:27:13:drv_write_reg	16	static
-../Src/drv835x.c:37:6:DRV835x_Configure	8	static
-../Src/drv835x.c:45:6:DRV835x_CalibrateCSA	40	static
-../Src/drv835x.c:70:6:DRV835x_ReadStatus	16	static
-../Src/drv835x.c:76:6:DRV835x_PrintFaults	24	static

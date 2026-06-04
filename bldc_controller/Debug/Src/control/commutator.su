@@ -1,2 +1,0 @@
-../Src/control/commutator.c:7:6:Commutator_init	16	static
-../Src/control/commutator.c:13:6:Commutator_update	24	static
