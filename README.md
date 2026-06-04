@@ -4,6 +4,15 @@ An open-source three-phase BLDC/PMSM motor controller built around the STM32G474
 
 ---
 
+## Hardware
+
+<p align="center">
+  <img src="images/side_view.png" alt="3D Render" width="52%">
+  <img src="images/bottom_view.png" alt="PCB Layout" width="46.56%">
+</p>
+
+---
+
 ## Overview
 
 A compact 4-layer ESC-class controller for robotics, gimbal, and general BLDC/PMSM drives. It pairs an STM32G474 (developed on the Nucleo-G474) with a DRV8353S gate driver and six MOSFETs in a standard three-phase half-bridge.
