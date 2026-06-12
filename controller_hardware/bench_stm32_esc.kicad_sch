@@ -21458,6 +21458,12 @@
 		(uuid "c6f365e6-994c-4d41-b48f-685d73bf1efe")
 	)
 	(junction
+		(at 375.92 44.45)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c7bbe7e2-7adf-472c-87c4-10f65ce6882b")
+	)
+	(junction
 		(at 30.48 318.77)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -21546,12 +21552,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "daa94d89-9cba-4176-b4d6-08048c112420")
-	)
-	(junction
-		(at 375.92 44.45)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "db530568-7dc1-42fb-a514-e472d811520c")
 	)
 	(junction
 		(at 372.11 149.86)
@@ -22679,16 +22679,6 @@
 	)
 	(wire
 		(pts
-			(xy 375.92 41.91) (xy 375.92 44.45)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1ee48e77-0609-4440-940e-fc60304328d6")
-	)
-	(wire
-		(pts
 			(xy 426.72 334.01) (xy 426.72 349.25)
 		)
 		(stroke
@@ -23039,7 +23029,7 @@
 	)
 	(wire
 		(pts
-			(xy 416.56 41.91) (xy 375.92 41.91)
+			(xy 416.56 44.45) (xy 375.92 44.45)
 		)
 		(stroke
 			(width 0)
@@ -24709,7 +24699,7 @@
 	)
 	(wire
 		(pts
-			(xy 407.67 46.99) (xy 416.56 46.99)
+			(xy 407.67 49.53) (xy 416.56 49.53)
 		)
 		(stroke
 			(width 0)
@@ -24929,7 +24919,7 @@
 	)
 	(wire
 		(pts
-			(xy 407.67 52.07) (xy 416.56 52.07)
+			(xy 407.67 54.61) (xy 416.56 54.61)
 		)
 		(stroke
 			(width 0)
@@ -25039,7 +25029,7 @@
 	)
 	(wire
 		(pts
-			(xy 396.24 49.53) (xy 396.24 64.77)
+			(xy 396.24 52.07) (xy 396.24 64.77)
 		)
 		(stroke
 			(width 0)
@@ -25749,7 +25739,7 @@
 	)
 	(wire
 		(pts
-			(xy 407.67 44.45) (xy 416.56 44.45)
+			(xy 407.67 46.99) (xy 416.56 46.99)
 		)
 		(stroke
 			(width 0)
@@ -26969,7 +26959,7 @@
 	)
 	(wire
 		(pts
-			(xy 396.24 49.53) (xy 416.56 49.53)
+			(xy 396.24 52.07) (xy 416.56 52.07)
 		)
 		(stroke
 			(width 0)
@@ -28608,7 +28598,7 @@
 		(uuid "36dd72d7-1748-470a-adf8-c55320bcf9bd")
 	)
 	(label "MOTA"
-		(at 407.67 44.45 0)
+		(at 407.67 46.99 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -28718,7 +28708,7 @@
 		(uuid "4f44be14-1ed2-42d0-adab-056b2af588fb")
 	)
 	(label "MOTB"
-		(at 407.67 46.99 0)
+		(at 407.67 49.53 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -29598,7 +29588,7 @@
 		(uuid "e56e3b45-aaac-42d2-bc07-1ccf573ec049")
 	)
 	(label "MOTC"
-		(at 407.67 52.07 0)
+		(at 407.67 54.61 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -67836,7 +67826,7 @@
 	)
 	(symbol
 		(lib_id "Connector:Screw_Terminal_01x05")
-		(at 421.64 46.99 0)
+		(at 421.64 49.53 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -67847,17 +67837,6 @@
 		(fields_autoplaced yes)
 		(uuid "e16ca15a-d25e-4b9b-af76-c776063ed1a1")
 		(property "Reference" "J4"
-			(at 424.18 45.7199 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Screw_Terminal_01x05"
 			(at 424.18 48.2599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -67868,8 +67847,20 @@
 				(justify left)
 			)
 		)
+		(property "Value" "Screw_Terminal_01x05"
+			(at 424.18 50.7999 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(property "Footprint" "footprints:CUI_TB005_-762-05BE"
-			(at 421.64 46.99 0)
+			(at 421.64 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -67880,7 +67871,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 421.64 46.99 0)
+			(at 421.64 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -67891,7 +67882,7 @@
 			)
 		)
 		(property "Description" "Generic screw terminal, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 421.64 46.99 0)
+			(at 421.64 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
