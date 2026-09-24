@@ -415,6 +415,10 @@ Motor parameters, limits and bandwidths are in `app/config.h`.
 
 ### Build, flash, test
 
+On Windows, double-click `controller_firmware\tools\setup.bat`. It installs anything missing (Python packages, CMake, Ninja, a MinGW compiler via winget), then builds and runs all the tests. If STM32CubeCLT is installed, it also builds the firmware. After that, `tools\dashboard.bat` starts the simulated motor and opens the dashboard.
+
+To do the same by hand:
+
 Firmware needs [STM32CubeCLT](https://www.st.com/en/development-tools/stm32cubeclt.html) (`arm-none-eabi-gcc`, `cmake`, `ninja`, `STM32_Programmer_CLI` on PATH). The simulator and tests also need a host C compiler (MSVC, MinGW or gcc/clang).
 
 ```
