@@ -1,0 +1,84 @@
+name: firmware
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+defaults:
+  run:
+    working-directory: controller_firmware
+
+jobs:
+  firmware:
+    name: Build STM32G474 firmware
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build
+      - name: Build
+        run: |
+          cmake --preset default
+          cmake --build build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foc_g474-firmware
+          path: |
+            controller_firmware/build/foc_g474.elf
+            controller_firmware/build/foc_g474.hex
+            controller_firmware/build/foc_g474.bin
+            controller_firmware/build/foc_g474.map
+
+  sil-tests:
+    name: Unit + SIL tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Set up MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Build simulator and tests
+        run: |
+          cmake --preset sim
+          cmake --build build-sim
+      - name: Run tests
+        run: ctest --preset sim
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dashboard + end-to-end tests
+        run: |
+          pip install -r tools/dashboard/requirements.txt pytest
+          python -m pytest -v tools/dashboard/tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foc_sim-${{ runner.os }}
+          path: |
+            controller_firmware/build-sim/foc_sim
+            controller_firmware/build-sim/foc_sim.exe
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [firmware, sil-tests]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Publish GitHub release
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes \
+            dist/foc_g474-firmware/* dist/foc_sim-Windows/* dist/foc_sim-Linux/*

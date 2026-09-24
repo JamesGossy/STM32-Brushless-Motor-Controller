@@ -1,6 +1,10 @@
 # STM32CubeIDE build output
 Debug/
 Release/
+build/
+build-*/
+__pycache__/
+.pytest_cache/
 
 # KiCad autosave/lock files
 *.lck
@@ -12,3 +16,5 @@ Release/
 # Misc
 *.txt
 peripheral_setup.txt
+!CMakeLists.txt
+!requirements.txt

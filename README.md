@@ -21,7 +21,7 @@ A compact 4-layer ESC-class controller for robotics, gimbal, and general BLDC/PM
 
 | Parameter | Value |
 |---|---|
-| Controller | STM32G474 (Nucleo-G474) |
+| Controller | STM32G474RET6 |
 | Gate driver | DRV8353S (SPI variant) |
 | Input voltage | 12 to 60 V |
 | Max continuous phase current | 25 A |
@@ -385,6 +385,94 @@ Signal-ground-power-signal puts a solid ground plane under the top signals for t
 - 4-layer, 57 x 75 mm, 1.6 mm thick, 1 oz copper (consider 2 oz outer if power traces run hot).
 - Most parts are assembly-ready. Through-hole connectors are hand-soldered after assembly, so exclude them from the BOM and placement file.
 - Plugged vias prevent solder wicking during reflow.
+
+---
+
+## Firmware
+
+Bare-metal C firmware for the STM32G474RET6, written with CMSIS headers only (no HAL). It lives in `controller_firmware/`. The control code is portable and runs unchanged on the board and in a software-in-the-loop (SIL) simulator.
+
+```
+controller_firmware/
+  app/              portable application: FOC, loops, calibration, CAN, telemetry, commands
+  hal/hal.h         hardware abstraction interface
+  hal/stm32g474/    board implementation (HRTIM, ADC, SPI, DRV8353, FDCAN, USB CDC, flash)
+  sim/              simulated HAL + PMSM/inverter/sensor model, foc_sim TCP server
+  tests/            C unit tests and SIL integration tests (ctest)
+  tools/dashboard/  live telemetry + control dashboard (browser)
+```
+
+| Item | Detail |
+|---|---|
+| PWM | HRTIM A/E/F, 20 kHz, centre-aligned, 200 ns dead time, 24 MHz HSE → 170 MHz |
+| Current loop | d/q PI at 20 kHz with decoupling feed-forward, sampled at the centre of the low-side window |
+| Delay compensation | Inverse Park angle advanced by 1.5·Ts·ω<sub>e</sub> |
+| Speed / field weakening | 2 kHz speed PI; FW PI on \|V<sub>dq</sub>\| holds 90 % of the SVPWM limit by driving I<sub>d</sub> negative |
+| Protection | Overcurrent, over/undervoltage, overtemp, current sum, DRV8353 status, encoder jump, stall, CAN timeout, watchdog |
+| Comms | CAN 1 Mbit (FDCAN2); USB CDC framed telemetry + text commands |
+
+Motor parameters, limits and bandwidths are in `app/config.h`.
+
+### Build, flash, test
+
+Firmware needs [STM32CubeCLT](https://www.st.com/en/development-tools/stm32cubeclt.html) (`arm-none-eabi-gcc`, `cmake`, `ninja`, `STM32_Programmer_CLI` on PATH). The simulator and tests also need a host C compiler (MSVC, MinGW or gcc/clang).
+
+```
+cd controller_firmware
+cmake --preset default && cmake --build build          # firmware
+cmake --build build --target flash                    # ST-Link over SWD
+
+cmake --preset sim && cmake --build build-sim          # simulator + tests
+ctest --preset sim                                    # unit + SIL tests
+```
+
+### Dashboard
+
+```
+pip install -r controller_firmware/tools/dashboard/requirements.txt
+python controller_firmware/tools/dashboard/plot_motor.py --sim            # simulated motor
+python controller_firmware/tools/dashboard/plot_motor.py --serial COM5    # real board over USB
+```
+
+Open http://localhost:8988 and type commands in the footer:
+
+- **Drive:** `calibrate`, `motor torque|speed|off`, `iq <A>`, `rpm <rpm>`, `limits <A> <rpm>`, `clear`, `status`, `help`.
+- **Simulator only:** `sim load <Nm>`, `sim vbus <V>`, `sim lock on|off`, `sim freeze on|off`, `sim bias <phase> <A>`, `sim temp <C>`, `sim gate on|off`, `sim status`.
+
+Telemetry is framed as `0xAA 0x55 | type | len | payload | CRC16-CCITT`; the layout is in `app/telem.h`.
+
+### CAN protocol
+
+- **IDs:** each frame uses an 11-bit ID of `(node << 5) | cmd`. Default node is 1; ID `0x000` is a broadcast e-stop.
+- **Floats:** little-endian `float32`.
+
+| cmd | Dir | Payload |
+|---|---|---|
+| 0x00 | → | E-stop (go idle) |
+| 0x01 | → | `u8` state: 0 idle, 1 torque, 2 speed, 3 calibrate |
+| 0x02 | → | `f32` I<sub>q</sub> setpoint (A) |
+| 0x03 | → | `f32` speed setpoint (mech rad/s) |
+| 0x04 | → | Clear faults |
+| 0x05 | → | `f32` current limit (A), `f32` speed limit (rad/s) |
+| 0x06 | → | `u8` new node ID (saved to flash) |
+| 0x10 | ← | `u8` state, `u8` mode, `u16` faults, `u16` DRV status 1, `u16` DRV status 2 |
+| 0x11 | ← | `f32` I<sub>q</sub>, `f32` speed |
+| 0x12 | ← | `f32` I<sub>d</sub>, `f32` mech angle |
+| 0x13 | ← | `f32` Vbus, `i16` FET temp ×10, `i16` ambient temp ×10 |
+
+Telemetry frames go out every 10 ms. When driven over CAN, the drive goes idle if no setpoint arrives within 250 ms; setpoints typed on the serial console are latched.
+
+Fault bits: 0 overcurrent, 1 overvoltage, 2 undervoltage, 3 overtemp/NTC, 4 DRV8353, 5 current sum, 6 calibration, 7 DRV init, 8 overspeed, 9 not calibrated, 10 ADC offset, 11 encoder, 12 NaN, 13 stall.
+
+### First run
+
+1. Use a current-limited supply with the motor unloaded and free to spin.
+2. Send `calibrate` (or CAN state 3). The drive detects current-sense polarity, encoder direction and offset, checks the pole-pair count, and saves the result to flash.
+3. Switch to torque or speed mode and send setpoints.
+
+### CI
+
+`.github/workflows/ci.yml` builds the firmware, runs the unit, SIL and dashboard tests on Linux and Windows, and attaches the firmware and simulator to a GitHub release when a `v*` tag is pushed.
 
 ---
 
