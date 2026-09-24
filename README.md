@@ -438,6 +438,8 @@ python controller_firmware/tools/dashboard/plot_motor.py --sim            # simu
 python controller_firmware/tools/dashboard/plot_motor.py --serial COM5    # real board over USB
 ```
 
+<p align="center"><img src="visuals/dashboard.gif" alt="Dashboard driving the simulated motor" width="90%"></p>
+
 Open http://localhost:8988 and type commands in the footer:
 
 - **Drive:** `calibrate`, `motor <rpm>` (e.g. `motor 3000`), `motor torque` + `iq <A>`, `motor off`, `rpm <rpm>`, `limits <A> <rpm>`, `clear`, `status`, `help`.
