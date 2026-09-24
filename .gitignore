@@ -18,3 +18,8 @@ __pycache__/
 peripheral_setup.txt
 !CMakeLists.txt
 !requirements.txt
+
+# IDE workspace and large media
+.metadata/
+*.MOV
+*.mov

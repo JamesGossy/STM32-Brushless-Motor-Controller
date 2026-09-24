@@ -7,8 +7,8 @@ An open-source three-phase BLDC/PMSM motor controller built around the STM32G474
 ## Hardware
 
 <p align="center">
-  <img src="images/side_view.png" alt="3D Render" width="52%">
-  <img src="images/bottom_view.png" alt="PCB Layout" width="46.56%">
+  <img src="visuals/side_view.png" alt="3D Render" width="52%">
+  <img src="visuals/bottom_view.png" alt="PCB Layout" width="46.56%">
 </p>
 
 ---
@@ -440,7 +440,7 @@ python controller_firmware/tools/dashboard/plot_motor.py --serial COM5    # real
 
 Open http://localhost:8988 and type commands in the footer:
 
-- **Drive:** `calibrate`, `motor torque|speed|off`, `iq <A>`, `rpm <rpm>`, `limits <A> <rpm>`, `clear`, `status`, `help`.
+- **Drive:** `calibrate`, `motor <rpm>` (e.g. `motor 3000`), `motor torque` + `iq <A>`, `motor off`, `rpm <rpm>`, `limits <A> <rpm>`, `clear`, `status`, `help`.
 - **Simulator only:** `sim load <Nm>`, `sim vbus <V>`, `sim lock on|off`, `sim freeze on|off`, `sim bias <phase> <A>`, `sim temp <C>`, `sim gate on|off`, `sim status`.
 
 Telemetry is framed as `0xAA 0x55 | type | len | payload | CRC16-CCITT`; the layout is in `app/telem.h`.
@@ -472,7 +472,7 @@ Fault bits: 0 overcurrent, 1 overvoltage, 2 undervoltage, 3 overtemp/NTC, 4 DRV8
 
 1. Use a current-limited supply with the motor unloaded and free to spin.
 2. Send `calibrate` (or CAN state 3). The drive detects current-sense polarity, encoder direction and offset, checks the pole-pair count, and saves the result to flash.
-3. Switch to torque or speed mode and send setpoints.
+3. Spin it with `motor 3000`, or `motor torque` then `iq 2`. `motor off` stops.
 
 ### CI
 
