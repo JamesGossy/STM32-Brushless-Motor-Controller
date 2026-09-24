@@ -1,3 +1,4 @@
+"""Make the dashboard modules importable from the tests."""
 import os
 import sys
 

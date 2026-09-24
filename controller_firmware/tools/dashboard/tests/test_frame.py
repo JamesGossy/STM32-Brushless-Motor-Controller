@@ -1,3 +1,4 @@
+"""Tests for the telemetry frame codec and the dashboard decoder."""
 import struct
 
 import plot_motor as pm
@@ -5,11 +6,13 @@ from fw_telem_frame import FrameParser, build_frame, crc16
 
 
 def test_crc_reference():
+    """Same check value as the C unit test."""
     assert crc16(b"123456789") == 0x29B1   # CRC-16/CCITT-FALSE check value, same as C unit test
     assert crc16(b"") == 0xFFFF
 
 
 def test_build_and_parse_roundtrip():
+    """A built frame parses back unchanged."""
     f = build_frame(0x10, b"hello")
     assert f[:2] == b"\xaa\x55" and f[2] == 0x10 and struct.unpack_from("<H", f, 3)[0] == 5
     p = FrameParser()
@@ -17,6 +20,7 @@ def test_build_and_parse_roundtrip():
 
 
 def test_parser_resyncs_and_handles_split_input():
+    """Garbage and byte-by-byte input are handled."""
     stream = b"\x01\x02\xaa" + build_frame(1, b"ab") + b"\xaa\x55\xff\xff" + build_frame(2, b"cd")
     p = FrameParser()
     out = []
@@ -26,6 +30,7 @@ def test_parser_resyncs_and_handles_split_input():
 
 
 def test_bad_crc_dropped():
+    """Corrupted frames are dropped and counted."""
     f = bytearray(build_frame(3, b"xyz"))
     f[6] ^= 0xFF
     p = FrameParser()
@@ -34,6 +39,7 @@ def test_bad_crc_dropped():
 
 
 def test_extract_frames_matches_parser():
+    """The dashboard decoder agrees with FrameParser."""
     stream = build_frame(1, b"12") + b"junk" + build_frame(5, b"\x10\x00\x20\x00")
     frames, rest = pm._extract_frames(stream + b"\xaa")
     assert frames == [(1, b"12"), (5, b"\x10\x00\x20\x00")]
@@ -41,6 +47,7 @@ def test_extract_frames_matches_parser():
 
 
 def test_dispatch_motor_and_faults():
+    """MOTOR frames decode, including fault names."""
     payload = struct.pack(pm._MOTOR_FMT, 3, 2, 0x0001 | 0x2000, 1.5, -0.5, 2.0, 0.0)
     d = pm._dispatch(pm._MSG_MOTOR, payload)
     assert d["state"] == 3 and d["enabled"] == 1 and d["fault"] == 1
@@ -49,6 +56,7 @@ def test_dispatch_motor_and_faults():
 
 
 def test_dispatch_other_types():
+    """Every other frame type decodes."""
     assert pm._dispatch(pm._MSG_SPEED, struct.pack(pm._SPEED_FMT, 3000.0, 3100.0, 1.0))["speed_request_rpm"] == 3100.0
     v = pm._dispatch(pm._MSG_VOLT, struct.pack(pm._VOLT_FMT, 24.0, 1.0, 2.0, 0.4, 0.5, 0.6))
     assert v["vbus"] == 24.0 and abs(v["duty_c"] - 0.6) < 1e-6
@@ -60,6 +68,7 @@ def test_dispatch_other_types():
 
 
 def test_fields_cover_charts():
+    """Every charted field exists and the page renders."""
     for chart in pm.CHARTS:
         for f in chart[1]:
             assert f in pm.FIELDS

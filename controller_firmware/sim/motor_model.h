@@ -1,11 +1,16 @@
+/*
+ * motor_model.h - PMSM, inverter and load model for the simulator.
+ */
 #pragma once
 
-/* PMSM in the rotor dq frame plus an averaged inverter with dead time */
 typedef struct {
+    /* motor parameters */
     double rs, ld, lq, psi, j, b, coulomb;
     int p;
-    double th_m, w_m, id, iq, t_load;
-    double vbus, t_dead, t_pwm;
+    /* state */
+    double th_m, w_m, id, iq;
+    /* environment */
+    double t_load, vbus, t_dead, t_pwm;
     int locked;
 } motor_t;
 

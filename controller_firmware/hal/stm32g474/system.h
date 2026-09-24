@@ -1,3 +1,6 @@
+/*
+ * system.h - clocks, millisecond tick, delays and the watchdog.
+ */
 #pragma once
 #include <stdint.h>
 #include "stm32g4xx.h"
@@ -8,4 +11,5 @@ void system_init(void);
 void delay_us(uint32_t us);
 void delay_ms(uint32_t ms);
 void wdg_init(void);
+
 static inline void wdg_kick(void) { IWDG->KR = 0xAAAA; }

@@ -1,34 +1,47 @@
+/*
+ * pwm.c - HRTIM setup.
+ *
+ * Output 1 of each timer drives the LOW-side gate (INLx) and output 2 the
+ * high side (INHx), so output 1 is set at CMP2 and reset at CMP1 and the
+ * dead-time unit generates output 2 as its complement. Timer A's period
+ * event triggers the ADCs, which lands at the centre of the low-side on time.
+ */
 #include "pwm.h"
 #include "board.h"
 
-static const uint8_t timers[3] = {0, 4, 5};   /* HRTIM A, E, F -> phase A, B, C */
+static const uint8_t timers[3] = {0, 4, 5};    /* HRTIM A, E, F */
 
+/* Configure the three timers and the ADC trigger. Outputs stay disabled. */
 void pwm_init(void)
 {
     RCC->APB2ENR |= RCC_APB2ENR_HRTIM1EN;
     (void)RCC->APB2ENR;
 
+    /* calibrate the high resolution delay line, then keep it calibrated */
     HRTIM1->sCommonRegs.DLLCR = HRTIM_DLLCR_CAL;
     while (!(HRTIM1->sCommonRegs.ISR & HRTIM_ISR_DLLRDY)) {}
     HRTIM1->sCommonRegs.DLLCR = HRTIM_DLLCR_CALRTE_0 | HRTIM_DLLCR_CALRTE_1 | HRTIM_DLLCR_CALEN;
 
-    uint32_t dt = (uint32_t)(DEADTIME_NS * (F_SYS / 1e9f) + 0.5f);
+    uint32_t dead = (uint32_t)(DEADTIME_NS * (F_SYS / 1e9f) + 0.5f);   /* dead-time ticks of 1/170 MHz */
+
     for (int i = 0; i < 3; i++) {
         HRTIM_Timerx_TypeDef *t = &HRTIM1->sTimerxRegs[timers[i]];
+
+        /* x4 clock, continuous, registers update at each counter wrap.
+           Preload is enabled last so these first values apply immediately. */
         t->TIMxCR = (3u << HRTIM_TIMCR_CK_PSC_Pos) | HRTIM_TIMCR_CONT | HRTIM_TIMCR_TRSTU;
         t->PERxR = PWM_PER;
         t->CMP1xR = PWM_PER / 4;
         t->CMP2xR = PWM_PER * 3 / 4;
-        /* output 1 = low side: on around counter wrap, off between CMP1..CMP2 */
         t->SETx1R = HRTIM_SET1R_CMP2;
         t->RSTx1R = HRTIM_RST1R_CMP1;
-        t->DTxR = (3u << HRTIM_DTR_DTPRSC_Pos) | (dt << HRTIM_DTR_DTR_Pos) | (dt << HRTIM_DTR_DTF_Pos);
+        t->DTxR = (3u << HRTIM_DTR_DTPRSC_Pos) | (dead << HRTIM_DTR_DTR_Pos) | (dead << HRTIM_DTR_DTF_Pos);
         t->OUTxR = HRTIM_OUTR_DTEN;
         t->TIMxCR |= HRTIM_TIMCR_PREEN;
     }
 
     HRTIM1->sCommonRegs.CR1 = 1u << HRTIM_CR1_ADC2USRC_Pos;
-    HRTIM1->sCommonRegs.ADC2R = HRTIM_ADC2R_AD2TAPER;   /* ADC trigger at centre of low-side on time */
+    HRTIM1->sCommonRegs.ADC2R = HRTIM_ADC2R_AD2TAPER;       /* ADC trigger 2 on timer A period */
 
     pin_mode(GPIOA, 8, PIN_AF, 13);  /* TA1 INLA */
     pin_mode(GPIOA, 9, PIN_AF, 13);  /* TA2 INHA */
@@ -38,6 +51,7 @@ void pwm_init(void)
     pin_mode(GPIOC, 7, PIN_AF, 13);  /* TF2 INHC */
 }
 
+/* Start all three counters together so the phases stay aligned. */
 void pwm_start(void)
 {
     HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TACEN | HRTIM_MCR_TECEN | HRTIM_MCR_TFCEN;
@@ -49,6 +63,7 @@ void pwm_on(void)
                                HRTIM_OENR_TE2OEN | HRTIM_OENR_TF1OEN | HRTIM_OENR_TF2OEN;
 }
 
+/* Disabled outputs go to their idle level (low), so all FETs are off. */
 void pwm_off(void)
 {
     HRTIM1->sCommonRegs.ODISR = HRTIM_ODISR_TA1ODIS | HRTIM_ODISR_TA2ODIS | HRTIM_ODISR_TE1ODIS |

@@ -15,6 +15,7 @@ pytestmark = pytest.mark.skipif(not SIM, reason="foc_sim not built")
 
 @pytest.fixture
 def sim():
+    """Start foc_sim on a free port and connect to it."""
     port = 5700 + os.getpid() % 200
     proc = subprocess.Popen([SIM, "--port", str(port), "--fast"], stdout=subprocess.PIPE)
     sock = None
@@ -33,13 +34,17 @@ def sim():
 
 
 class Link:
+    """Minimal dashboard-like client: sends commands, decodes telemetry."""
+
     def __init__(self, sock):
         self.sock, self.buf, self.state, self.logs = sock, b"", {}, []
 
     def send(self, line):
+        """Send one command line."""
         self.sock.sendall(line.encode() + b"\n")
 
     def pump(self, seconds):
+        """Read and decode telemetry for `seconds`."""
         end = time.time() + seconds
         while time.time() < end:
             try:
@@ -54,6 +59,7 @@ class Link:
                 self.state.update(d)
 
     def wait_for(self, pred, timeout):
+        """Pump until pred(state) is true or the timeout passes."""
         end = time.time() + timeout
         while time.time() < end:
             self.pump(0.1)
@@ -63,18 +69,19 @@ class Link:
 
 
 def test_calibrate_and_spin(sim):
+    """Calibrate, then spin to 3000 rpm."""
     link = Link(sim)
     assert link.wait_for(lambda s: s.get("state") == 1, 5), "never reached IDLE"
     link.send("calibrate")
     assert link.wait_for(lambda s: s.get("state") == 2, 5)
     assert link.wait_for(lambda s: s.get("state") == 1, 30), "calibration did not finish"
-    link.send("motor speed")
-    link.send("rpm 3000")
+    link.send("motor 3000")
     assert link.wait_for(lambda s: abs(s.get("speed_rpm", 0) - 3000) < 50, 30)
     assert link.state["fault"] == 0
 
 
 def test_sim_and_status_commands(sim):
+    """Simulator and firmware commands both reply."""
     link = Link(sim)
     link.wait_for(lambda s: s.get("state") == 1, 5)
     link.send("sim load 0.02")
@@ -84,9 +91,20 @@ def test_sim_and_status_commands(sim):
     assert any(l.startswith("state=IDLE") for l in link.logs)
 
 
-def test_fault_reported(sim):
+def test_refused_until_calibrated(sim):
+    """Running before calibration is refused, not faulted."""
     link = Link(sim)
     link.wait_for(lambda s: s.get("state") == 1, 5)
-    link.send("motor torque")                   # not calibrated yet
+    link.send("motor 1000")                     # not calibrated yet
+    link.pump(0.5)
+    assert link.state["state"] == 1
+    assert any("not calibrated" in l for l in link.logs)
+
+
+def test_fault_reported(sim):
+    """A fault shows up in the telemetry with its name."""
+    link = Link(sim)
+    link.wait_for(lambda s: s.get("state") == 1, 5)
+    link.send("sim temp 120")
     assert link.wait_for(lambda s: s.get("state") == 4, 5)
-    assert "not calibrated" in pm.fault_names(link.state["__faults__"])
+    assert "overtemp" in pm.fault_names(link.state["__faults__"])

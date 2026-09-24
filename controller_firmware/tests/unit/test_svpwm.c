@@ -1,8 +1,12 @@
+/*
+ * test_svpwm.c - unit tests for the space vector modulator.
+ */
 #include "test.h"
 #include "svpwm.h"
 #include "trig.h"
 #include "config.h"
 
+/* Zero voltage gives 50 % on every phase. */
 static void zero_vector_is_half(void)
 {
     trig_init();
@@ -11,6 +15,7 @@ static void zero_vector_is_half(void)
 }
 
 /* line-to-line voltages from duties must reproduce the commanded vector */
+/* The duties must reproduce the commanded dq vector at any angle. */
 static void reproduces_vector(void)
 {
     trig_init();
@@ -26,6 +31,7 @@ static void reproduces_vector(void)
     }
 }
 
+/* The largest linear vector fits inside the duty limits. */
 static void linear_limit_inside_duty_range(void)
 {
     trig_init();
@@ -36,6 +42,7 @@ static void linear_limit_inside_duty_range(void)
     }
 }
 
+/* Asking for too much voltage clamps the duties. */
 static void overmodulation_clamps(void)
 {
     trig_init();

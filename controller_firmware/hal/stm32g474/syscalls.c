@@ -1,15 +1,24 @@
+/*
+ * syscalls.c - minimal newlib system call stubs.
+ *
+ * Only the heap is real (printf's float formatting allocates); there is no
+ * file system or console.
+ */
 #include <errno.h>
 #include <stdint.h>
 #include <sys/stat.h>
 
-/* newlib stubs: only the heap is real (used by printf's float formatting) */
-extern char end, _estack, _Min_Stack_Size;
+extern char end, _estack, _Min_Stack_Size;   /* from the linker script */
 
+/* Grow the heap upwards from the end of .bss, stopping short of the stack. */
 void *_sbrk(int incr)
 {
     static char *brk = &end;
     char *limit = &_estack - (uint32_t)&_Min_Stack_Size;
-    if (brk + incr > limit) { errno = ENOMEM; return (void *)-1; }
+    if (brk + incr > limit) {
+        errno = ENOMEM;
+        return (void *)-1;
+    }
     char *prev = brk;
     brk += incr;
     return prev;

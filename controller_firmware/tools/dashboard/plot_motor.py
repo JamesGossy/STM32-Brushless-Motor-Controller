@@ -21,9 +21,9 @@ Usage:
     python3 tools/dashboard/plot_motor.py --serial COM5  # real board over USB
     then open http://localhost:8988
 
-Type commands in the page footer (calibrate, motor torque|speed|off, iq <A>,
-rpm <rpm>, limits <A> <rpm>, clear, status, help). In the simulator, lines
-starting with "sim" drive the plant (sim load <Nm>, sim vbus <V>, sim lock on ...).
+Type commands in the page footer: calibrate, motor <rpm>, motor torque,
+iq <A>, motor off, clear, status, help. In the simulator, lines starting with
+"sim" change the simulated world (sim load <Nm>, sim vbus <V>, sim lock on ...).
 """
 import argparse
 import json
@@ -42,7 +42,6 @@ import tornado.websocket
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fw_telem_frame import crc16 as _crc16  # noqa: E402
-from fw_telem_frame import build_frame  # noqa: E402,F401
 
 # ── telemetry channels (decoded field -> display) ────────────────────────────
 FIELDS = [
@@ -79,16 +78,19 @@ _last = {"faults": 0, "state": None}
 
 
 def _set(field_vals):
+    """Merge decoded fields into the latest-value table."""
     with _state_lock:
         _state.update(field_vals)
 
 
 def _snapshot():
+    """Copy of the latest-value table for broadcasting."""
     with _state_lock:
         return dict(_state)
 
 
 def fault_names(mask):
+    """Names of the fault bits set in `mask` (bit order matches app/foc.h)."""
     return [n for i, n in enumerate(FAULTS) if mask & (1 << i)]
 
 
@@ -181,6 +183,8 @@ def _dispatch(mtype, payload):
 
 
 def _handle_fields(fields):
+    """Route one decoded frame: log text and state/fault changes to the log
+    panel, numeric fields to the chart state."""
     log_text = fields.pop("__log__", None)
     if log_text is not None:
         _log_q.put(log_text)
@@ -266,12 +270,16 @@ def serial_thread(port, stop):
 
 
 class IndexHandler(tornado.web.RequestHandler):
+    """Serves the dashboard page."""
+
     def get(self):
         self.set_header("Content-Type", "text/html")
         self.write(self.application.settings["page"])
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
+    """Browser connection: samples go out, typed commands come in."""
+
     def check_origin(self, origin):
         return True
 
@@ -330,7 +338,7 @@ PAGE_TMPL = """<!doctype html><html><head><meta charset="utf-8">
 <div id="charts"></div>
 <div id="log"></div>
 <div id="foot">
-  <input id="cmd" placeholder="command (e.g. calibrate | motor speed | rpm 3000 | iq 2 | sim load 0.05 | status)" autofocus>
+  <input id="cmd" placeholder="command (e.g. calibrate | motor 3000 | motor torque | iq 2 | motor off | sim load 0.05 | status | help)" autofocus>
   <button onclick="sendCmd()">Send</button></div>
 <script>
 const CHARTS = __CHARTS__;
@@ -436,6 +444,7 @@ document.getElementById("cmd").addEventListener("keydown", e => { if (e.key === 
 
 
 def render_page(window):
+    """Fill the chart definitions into the page template."""
     charts_json = [
         {"l": chart[0], "y": chart[1], "c": chart[2],
          "s": chart[3] if len(chart) > 3 else None}
@@ -448,6 +457,7 @@ def render_page(window):
 
 
 def find_sim():
+    """Locate a built foc_sim executable in controller_firmware/build-sim."""
     root = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                          os.pardir, os.pardir))
     for name in ("foc_sim.exe", "foc_sim"):
@@ -462,6 +472,7 @@ def find_sim():
 
 
 def main():
+    """Parse arguments, start the link thread (and simulator) and serve the page."""
     ap = argparse.ArgumentParser(description="FOC controller telemetry dashboard")
     ap.add_argument("--sim", nargs="?", const="auto", default=None,
                     help="start the simulator (optionally give the foc_sim path) and attach to it")

@@ -1,3 +1,17 @@
+/*
+ * calib.c - finds everything the control loop needs to know about the sensors.
+ *
+ *   1. Ramp a d-axis voltage at 0 rad until CAL_CURRENT flows. The sign of the
+ *      measured phase A current gives the current sense polarity.
+ *   2. Hold, so the rotor settles on the d axis.
+ *   3. Sweep CAL_EREVS electrical revolutions forward. The way the encoder
+ *      moves gives its direction, and how far it moves checks the pole pairs.
+ *   4. Sweep back. The average difference between the encoder angle and the
+ *      forced angle over both sweeps is the encoder offset (friction lag
+ *      cancels because it has opposite sign in each direction).
+ *
+ * Runs open loop in voltage mode from the control interrupt.
+ */
 #include "calib.h"
 #include "foc.h"
 #include "cfg.h"
@@ -7,93 +21,108 @@
 #include "config.h"
 #include <math.h>
 
-/* 1. ramp d-axis voltage at 0 rad until CAL_CURRENT flows -> current sign
-   2. settle, then sweep CAL_EREVS electrical revs forward and back
-   3. forward travel gives encoder direction and a pole pair sanity check
-   4. circular mean of (p*theta_m - theta_forced) gives the offset */
+enum { RAMP, SETTLE, FORWARD, BACKWARD };
 
-enum { CAL_RAMP, CAL_SETTLE, CAL_FWD, CAL_REV };
-static int step, t, dir;
-static float v, th, ia_f, moved, last;
-static float s1, c1, s2, c2;
+static int phase, ticks, dir;
+static float volts, angle, ia_filt, travel, last_raw;
+static float sum_sin_fwd, sum_cos_fwd, sum_sin_rev, sum_cos_rev;
 
+/* Begin calibration: reset state and enable the power stage. */
 void cal_start(void)
 {
-    step = CAL_RAMP;
-    t = 0;
-    v = th = ia_f = moved = 0.0f;
-    s1 = c1 = s2 = c2 = 0.0f;
+    phase = RAMP;
+    ticks = 0;
+    volts = angle = ia_filt = travel = 0.0f;
+    sum_sin_fwd = sum_cos_fwd = sum_sin_rev = sum_cos_rev = 0.0f;
     svpwm_reset();
     foc.state = ST_CAL;
     hal_pwm_enable(1);
 }
 
-static void accum(float raw, float *s, float *c, int d)
+/* Add one sample of (encoder electrical angle - forced angle) to a circular
+   mean, assuming encoder direction d. */
+static void accumulate(float raw, int d, float *s, float *c)
 {
-    float e = wrap_2pi(POLE_PAIRS * (d > 0 ? raw : TWO_PI - raw) - th);
+    float enc = d > 0 ? raw : TWO_PI - raw;
+    float err = wrap_2pi(POLE_PAIRS * enc - angle);
     float se, ce;
-    sincos_lut(e, &se, &ce);
+    sincos_lut(err, &se, &ce);
     *s += se;
     *c += ce;
 }
 
+/* Finish: store the results and return to idle. */
+static void finish(float raw)
+{
+    hal_pwm_enable(0);
+    cfg.enc_dir = dir;
+    cfg.enc_offset = wrap_2pi(atan2f(sum_sin_fwd, sum_cos_fwd));
+    cfg.cal_valid = 1;
+    foc_pll_reset(dir > 0 ? raw : wrap_2pi(TWO_PI - raw));
+    foc.cal_done = 1;
+    foc.state = ST_IDLE;
+}
+
+/* One calibration step per control interrupt. */
 void cal_run(float ia_raw, float raw)
 {
     const float sweep = TWO_PI * CAL_EREVS;
-    const float dth = sweep / CAL_SWEEP_S * TS;
-    t++;
+    const float step = sweep / CAL_SWEEP_S * TS;
+    ticks++;
 
-    switch (step) {
-    case CAL_RAMP:
-        ia_f += 0.01f * (ia_raw - ia_f);
-        v += CAL_VMAX * TS;
-        if (fabsf(ia_f) >= CAL_CURRENT) {
-            cfg.cur_sign = ia_f > 0 ? 1 : -1;
-            step = CAL_SETTLE;
-            t = 0;
-        } else if (v > CAL_VMAX) {
-            foc_fault(F_CAL);
+    switch (phase) {
+    case RAMP:
+        ia_filt += 0.01f * (ia_raw - ia_filt);
+        volts += CAL_VMAX * TS;     /* reaches CAL_VMAX in 1 s */
+        if (fabsf(ia_filt) >= CAL_CURRENT) {
+            cfg.cur_sign = ia_filt > 0 ? 1 : -1;
+            phase = SETTLE;
+            ticks = 0;
+        } else if (volts > CAL_VMAX) {
+            foc_fault(F_CAL);   /* no current: motor or sensing not connected */
             return;
         }
         break;
-    case CAL_SETTLE:
-        if (t > (int)(F_PWM / 2)) {
-            step = CAL_FWD;
-            last = raw;
-            t = 0;
+
+    case SETTLE:
+        if (ticks > (int)(F_PWM / 2)) {
+            phase = FORWARD;
+            last_raw = raw;
         }
         break;
-    case CAL_FWD:
-        th += dth;
-        moved += wrap_pi(raw - last);
-        last = raw;
-        accum(raw, &s1, &c1, 1);
-        accum(raw, &s2, &c2, -1);
-        if (th >= sweep) {
-            float expect = sweep / POLE_PAIRS;
-            if (fabsf(moved) < 0.75f * expect || fabsf(moved) > 1.25f * expect) {
-                foc_fault(F_CAL);
+
+    case FORWARD:
+        angle += step;
+        travel += wrap_pi(raw - last_raw);
+        last_raw = raw;
+        /* direction isn't known yet, so keep sums for both */
+        accumulate(raw, 1, &sum_sin_fwd, &sum_cos_fwd);
+        accumulate(raw, -1, &sum_sin_rev, &sum_cos_rev);
+
+        if (angle >= sweep) {
+            float expected = sweep / POLE_PAIRS;
+            if (fabsf(travel) < 0.75f * expected || fabsf(travel) > 1.25f * expected) {
+                foc_fault(F_CAL);   /* wrong pole pairs or rotor stuck */
                 return;
             }
-            dir = moved > 0 ? 1 : -1;
-            if (dir < 0) { s1 = s2; c1 = c2; }
-            step = CAL_REV;
+            dir = travel > 0 ? 1 : -1;
+            if (dir < 0) {
+                sum_sin_fwd = sum_sin_rev;
+                sum_cos_fwd = sum_cos_rev;
+            }
+            phase = BACKWARD;
         }
         break;
-    case CAL_REV:
-        th -= dth;
-        accum(raw, &s1, &c1, dir);
-        if (th <= 0.0f) {
-            hal_pwm_enable(0);
-            cfg.enc_dir = dir;
-            cfg.enc_offset = wrap_2pi(atan2f(s1, c1));
-            cfg.cal_valid = 1;
-            foc_pll_reset(dir > 0 ? raw : wrap_2pi(TWO_PI - raw));
-            foc.cal_done = 1;
-            foc.state = ST_IDLE;
+
+    case BACKWARD:
+        angle -= step;
+        accumulate(raw, dir, &sum_sin_fwd, &sum_cos_fwd);
+        if (angle <= 0.0f) {
+            finish(raw);
             return;
         }
         break;
     }
-    svpwm_apply(v, 0.0f, th, foc.vbus);
+
+    svpwm_apply(volts, 0.0f, angle, foc.vbus);
 }

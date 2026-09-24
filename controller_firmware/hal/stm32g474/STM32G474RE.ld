@@ -1,3 +1,7 @@
+/*
+ * STM32G474RE.ld - linker script.
+ * 512 KB flash (last 4 KB reserved for settings, see flash.c), 128 KB RAM.
+ */
 ENTRY(Reset_Handler)
 
 MEMORY

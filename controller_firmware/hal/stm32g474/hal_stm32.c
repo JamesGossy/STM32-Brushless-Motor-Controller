@@ -1,3 +1,7 @@
+/*
+ * hal_stm32.c - hal.h for the STM32G474 board. Mostly thin wrappers around
+ * the drivers in this folder, plus the 20 kHz ADC interrupt.
+ */
 #include "hal.h"
 #include "system.h"
 #include "board.h"
@@ -9,6 +13,7 @@
 #include "flash.h"
 #include "usb_cdc.h"
 
+/* Bring up clocks and peripherals. PWM outputs stay disabled. */
 void hal_init(void)
 {
     system_init();
@@ -20,6 +25,7 @@ void hal_init(void)
     fdcan_init();
 }
 
+/* Start the PWM counters (which trigger the ADC and the control loop). */
 void hal_start(void)
 {
     adc_irq_enable();
@@ -31,19 +37,25 @@ uint32_t hal_millis(void) { return ms_ticks; }
 
 uint32_t hal_irq_save(void)
 {
-    uint32_t pm = __get_PRIMASK();
+    uint32_t primask = __get_PRIMASK();
     __disable_irq();
-    return pm;
+    return primask;
 }
 
-void hal_irq_restore(uint32_t s) { __set_PRIMASK(s); }
+void hal_irq_restore(uint32_t state) { __set_PRIMASK(state); }
 
 void hal_pwm_set(float da, float db, float dc) { pwm_set(da, db, dc); }
-void hal_pwm_enable(int on) { if (on) pwm_on(); else pwm_off(); }
+
+void hal_pwm_enable(int on)
+{
+    if (on) pwm_on();
+    else pwm_off();
+}
 
 int hal_gate_init(void) { return drv_init(); }
 void hal_gate_clear(void) { drv_clear_fault(); }
 
+/* Read the DRV8353 status registers. Bit 10 of register 0 is the global FAULT flag. */
 int hal_gate_status(uint16_t *s1, uint16_t *s2)
 {
     *s1 = drv_read(0x00);
@@ -65,17 +77,20 @@ int hal_nv_write(const void *d, size_t n) { return flash_write(d, n); }
 void hal_led_toggle(void) { GPIOA->ODR ^= 1u << LED_PIN; }
 void hal_wdg_kick(void) { wdg_kick(); }
 
-/* 20 kHz: fires at ADC1 end of injected sequence (centre of low-side on time) */
+/* 20 kHz: ADC1 has finished its injected sequence, which the HRTIM triggered
+   at the centre of the low-side on time. ADC2 and ADC3 finished earlier. */
 void ADC1_2_IRQHandler(void)
 {
     hal_sample_t s;
     ADC1->ISR = ADC_ISR_JEOS | ADC_ISR_JEOC;
-    enc_cs_low();
+
+    enc_cs_low();       /* give the encoder its CS setup time while we read the ADCs */
     s.ia = (uint16_t)ADC2->JDR1;
     s.ib = (uint16_t)ADC1->JDR1;
     s.ic = (uint16_t)ADC3->JDR1;
     s.vbus = (uint16_t)ADC1->JDR2;
     enc_start();
     s.enc = enc_finish();
+
     app_control_isr(&s);
 }

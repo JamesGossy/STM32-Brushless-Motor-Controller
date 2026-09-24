@@ -1,14 +1,19 @@
+/*
+ * test_telem.c - unit tests for the telemetry frame format.
+ */
 #include "test.h"
 #include "frames.h"
 #include "telem.h"
 #include "sim.h"
 
+/* CRC matches the published CRC-16/CCITT-FALSE check value. */
 static void crc_reference_vector(void)
 {
     CHECK(crc16_ccitt((const uint8_t *)"123456789", 9) == 0x29B1);   /* CRC-16/CCITT-FALSE check value */
     CHECK(crc16_ccitt(0, 0) == 0xFFFF);
 }
 
+/* Header, payload and CRC land where the dashboard expects them. */
 static void frame_layout(void)
 {
     uint8_t p[3] = {1, 2, 3}, f[16];
@@ -20,6 +25,7 @@ static void frame_layout(void)
     CHECK(f[8] == (crc & 0xFF) && f[9] == (crc >> 8));
 }
 
+/* Frames decode correctly with noise between them. */
 static void roundtrip_with_garbage(void)
 {
     uint8_t buf[64], p[4] = {9, 8, 7, 6};
@@ -36,6 +42,7 @@ static void roundtrip_with_garbage(void)
     CHECK(fr[1].type == TELEM_TEMP && fr[1].payload[3] == 6);
 }
 
+/* A flipped byte is caught by the CRC. */
 static void corrupted_frame_rejected(void)
 {
     uint8_t buf[32], p[4] = {1, 2, 3, 4};
@@ -46,6 +53,7 @@ static void corrupted_frame_rejected(void)
     CHECK(parse_frames(buf, n, fr, 2, &bad) == 0 && bad == 1);
 }
 
+/* telem_log() sends a LOG frame on the serial link. */
 static void log_goes_to_serial(void)
 {
     sim_config_t c;

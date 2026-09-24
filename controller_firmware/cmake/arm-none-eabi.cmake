@@ -1,3 +1,6 @@
+# Cross-compile toolchain for the STM32G474 (Cortex-M4F, hard float).
+# Used by the "default" CMake preset.
+
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)

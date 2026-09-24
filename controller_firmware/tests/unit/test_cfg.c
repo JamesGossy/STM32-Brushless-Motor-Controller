@@ -1,8 +1,12 @@
+/*
+ * test_cfg.c - unit tests for settings storage.
+ */
 #include "test.h"
 #include "cfg.h"
 #include "hal.h"
 #include "config.h"
 
+/* Empty storage loads uncalibrated defaults. */
 static void defaults_without_nv(void)
 {
     cfg.cal_valid = 1;
@@ -10,6 +14,7 @@ static void defaults_without_nv(void)
     CHECK(cfg.cal_valid == 0 && cfg.enc_dir == 1 && cfg.cur_sign == 1 && cfg.node_id == CAN_NODE_ID);
 }
 
+/* Saved settings load back unchanged. */
 static void save_load_roundtrip(void)
 {
     cfg_defaults();
@@ -25,6 +30,7 @@ static void save_load_roundtrip(void)
     CHECK_NEAR(cfg.enc_offset, 1.25, 1e-7);
 }
 
+/* A corrupted block is rejected by the checksum. */
 static void corruption_detected(void)
 {
     cfg_defaults();
@@ -38,6 +44,7 @@ static void corruption_detected(void)
     CHECK(cfg.cal_valid == 0);
 }
 
+/* The block size suits 64-bit flash programming. */
 static void struct_is_flash_friendly(void)
 {
     CHECK(sizeof(cfg_t) % 8 == 0);      /* flash programs double words */

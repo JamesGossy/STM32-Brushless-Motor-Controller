@@ -1,3 +1,6 @@
+/*
+ * drv8353.h - TI DRV8353S gate driver over SPI.
+ */
 #pragma once
 #include <stdint.h>
 

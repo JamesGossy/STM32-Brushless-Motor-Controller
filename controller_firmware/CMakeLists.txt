@@ -1,3 +1,8 @@
+# FOC motor controller firmware.
+#
+#   cmake --preset default   STM32G474 firmware (cross compile, see cmake/arm-none-eabi.cmake)
+#   cmake --preset sim       host build: foc_sim simulator plus unit and SIL tests
+#
 cmake_minimum_required(VERSION 3.20)
 project(foc_g474 C)
 set(CMAKE_C_STANDARD 11)
@@ -89,6 +94,7 @@ else()
   add_executable(test_sil tests/integration/test_sil.c)
   target_include_directories(test_sil PRIVATE tests)
   target_link_libraries(test_sil PRIVATE foc_sil)
+  # one ctest entry per SIL case so each gets a fresh simulator
   set(SIL_CASES
     boot calibration not_calibrated torque_step speed_tracking load_rejection
     field_weakening reverse can_control can_timeout serial_latched estop
